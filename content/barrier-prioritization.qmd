@@ -32,9 +32,9 @@ The primary conservation outcome of the WCRP will be ... To achieve this, it is 
 #| echo: false
 
 # Variables to API calls
-connect = api.watershed_connectivity("ALL")[0]
-total = round(api.watershed_connectivity("ALL")[1],2) #total km in watershed
-access = round(api.watershed_connectivity("ALL")[2],2)
+connect = api.watershed_connectivity("ALL", 'BELA')[0]
+total = round(api.watershed_connectivity("ALL", 'BELA')[1],2) #total km in watershed
+access = round(api.watershed_connectivity("ALL", 'BELA')[2],2)
 gain = round((total*0.96)-access,2)
 
 # Data frame with table info

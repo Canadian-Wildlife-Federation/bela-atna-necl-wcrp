@@ -5,9 +5,10 @@ import requests
 import json
 import pandas
 
-def barrier_extent(barrier_type):
 
-    request = 'https://cabd-pro.cwf-fcf.org/bcfishpass/functions/postgisftw.wcrp_barrier_extent/items.json?watershed_group_code=HORS&barrier_type=' + barrier_type
+def barrier_extent(barrier_type, watershed):
+
+    request = 'https://cabd-pro.cwf-fcf.org/bcfishpass/functions/postgisftw.wcrp_barrier_extent/items.json?watershed_group_code='+watershed+'&barrier_type=' + barrier_type
 
     response_api = requests.get(request)
     parse = response_api.text
@@ -18,8 +19,8 @@ def barrier_extent(barrier_type):
 
     return blocked_km, blocked_pct
 
-def barrier_count(barrier_type):
-    request = 'https://cabd-pro.cwf-fcf.org/bcfishpass/functions/postgisftw.wcrp_barrier_count/items.json?watershed_group_code=HORS&barrier_type=' + barrier_type
+def barrier_count(barrier_type, watershed):
+    request = 'https://cabd-pro.cwf-fcf.org/bcfishpass/functions/postgisftw.wcrp_barrier_count/items.json?watershed_group_code='+watershed+'&barrier_type=' + barrier_type
 
     response_api = requests.get(request)
     parse = response_api.text
@@ -34,9 +35,9 @@ def barrier_count(barrier_type):
 
     return n_passable, n_barrier, n_potential, n_unknown, sum(sum_bar)
 
-def barrier_severity(barrier_type):
+def barrier_severity(barrier_type, watershed):
 
-    request = 'https://cabd-pro.cwf-fcf.org/bcfishpass/functions/postgisftw.wcrp_barrier_severity/items.json?watershed_group_code=HORS&barrier_type=' + barrier_type
+    request = 'https://cabd-pro.cwf-fcf.org/bcfishpass/functions/postgisftw.wcrp_barrier_severity/items.json?watershed_group_code='+watershed+'&barrier_type=' + barrier_type
 
     response_api = requests.get(request)
     parse = response_api.text
@@ -48,9 +49,9 @@ def barrier_severity(barrier_type):
 
     return n_assessed_barrier, n_assess_total, pct_assessed_barrier
 
-def watershed_connectivity(habitat_type):
+def watershed_connectivity(habitat_type, watershed):
 
-    request = 'https://cabd-pro.cwf-fcf.org/bcfishpass/functions/postgisftw.wcrp_habitat_connectivity_status/items.json?watershed_group_code=HORS&habitat_type=' + habitat_type
+    request = 'https://cabd-pro.cwf-fcf.org/bcfishpass/functions/postgisftw.wcrp_habitat_connectivity_status/items.json?watershed_group_code='+watershed+'&habitat_type=' + habitat_type
 
     response_api = requests.get(request)
     parse = response_api.text
@@ -64,18 +65,20 @@ def watershed_connectivity(habitat_type):
 
 warnings.filterwarnings('ignore')
 
-connect = watershed_connectivity("ALL")[0]
-total = watershed_connectivity("ALL")[1] #total km in HORS
-access = watershed_connectivity("ALL")[2]
-gain = round((total*0.96)-access,2)
+connect = watershed_connectivity("ALL", 'BELA')[0] + watershed_connectivity("ALL", 'ATNA')[0] + watershed_connectivity("ALL", 'NECL')[0]
+total = watershed_connectivity("ALL", 'BELA')[1] + watershed_connectivity("ALL", 'ATNA')[1] + watershed_connectivity("ALL", 'NECL')[1]#total km in HORS
+access = watershed_connectivity("ALL", 'BELA')[2] + watershed_connectivity("ALL", 'ATNA')[2] + watershed_connectivity("ALL", 'NECL')[2]
+gain = round((total*0.96)-access,2) # UPDATE GOAL PERCENTAGE
 
-num_dam = barrier_severity('DAM')[1]
-km_dam = barrier_extent('DAM')[0]
-pct_dam = barrier_extent('DAM')[1]
-resource_km = barrier_extent('ROAD, RESOURCE/OTHER')[0]
-resource_pct = round(barrier_extent('ROAD, RESOURCE/OTHER')[1])
-demo_km = barrier_extent('ROAD, DEMOGRAPHIC')[0]
-demo_pct = round(barrier_extent('ROAD, DEMOGRAPHIC')[1])
-resource_sev = round(barrier_severity('ROAD, RESOURCE/OTHER')[2])
-demo_sev = round(barrier_severity('ROAD, DEMOGRAPHIC')[2])
-sum_road = barrier_severity('ROAD, RESOURCE/OTHER')[1] + barrier_severity('ROAD, DEMOGRAPHIC')[1]
+num_dam = barrier_severity('DAM', 'BELA')[1] + barrier_severity('DAM', 'ATNA')[1] + barrier_severity('DAM', 'NECL')[1]
+km_dam = barrier_extent('DAM', 'BELA')[0] + barrier_extent('DAM', 'ATNA')[0] + barrier_extent('DAM', 'NECL')[0]
+pct_dam = barrier_extent('DAM', 'BELA')[1]
+resource_km = barrier_extent('ROAD, RESOURCE/OTHER', 'BELA')[0] + barrier_extent('ROAD, RESOURCE/OTHER', 'NECL')[0]
+resource_pct = round(barrier_extent('ROAD, RESOURCE/OTHER', 'BELA')[1])
+demo_km = barrier_extent('ROAD, DEMOGRAPHIC', 'BELA')[0] + barrier_extent('ROAD, DEMOGRAPHIC', 'ATNA')[0] + barrier_extent('ROAD, DEMOGRAPHIC', 'NECL')[0]
+demo_pct = round(barrier_extent('ROAD, DEMOGRAPHIC', 'BELA')[1])
+resource_sev = round(barrier_severity('ROAD, RESOURCE/OTHER', 'BELA')[2] + barrier_severity('ROAD, RESOURCE/OTHER', 'ATNA')[2] + barrier_severity('ROAD, RESOURCE/OTHER', 'NECL')[2])
+demo_sev = round(barrier_severity('ROAD, DEMOGRAPHIC', 'BELA')[2] + barrier_severity('ROAD, DEMOGRAPHIC', 'ATNA')[2] + barrier_severity('ROAD, DEMOGRAPHIC', 'NECL')[2])
+sum_road = barrier_severity('ROAD, RESOURCE/OTHER', 'BELA')[1] + barrier_severity('ROAD, DEMOGRAPHIC', 'BELA')[1] \
+          + barrier_severity('ROAD, RESOURCE/OTHER', 'ATNA')[1] + barrier_severity('ROAD, DEMOGRAPHIC', 'ATNA')[1] \
+          + barrier_severity('ROAD, RESOURCE/OTHER', 'NECL')[1] + barrier_severity('ROAD, DEMOGRAPHIC', 'NECL')[1]
